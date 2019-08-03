@@ -24,6 +24,9 @@ testFile () {
 
 testFile archiver_c simple1.txt
 testFile archiver_c simple2.txt
-testFile archiver_c 100MB.bin
-testFile archiver_c image.png
-testFile archiver_c bigimage.jpg
+
+# To use these tests download a big file, an image and a very big image to test it
+# Because these files are not included into git
+#testFile archiver_c 100MB.bin
+#testFile archiver_c image.png
+#testFile archiver_c bigimage.jpg

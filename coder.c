@@ -4,7 +4,7 @@
 
 #include "coder.h"
 
-void print_b(int n, int length) {
+void _print_binary(int n, int length) {
     int k, c;
     for (c = length - 1; c >= 0; c--) {
         k = n >> c;
@@ -16,25 +16,25 @@ void print_b(int n, int length) {
     DEBUG_PRINT("\n");
 }
 
-void print_tree(struct freq_byte *root) {
+void _print_tree(struct freq_byte *root) {
     if (root) {
-        print_tree(root->left);
+        _print_tree(root->left);
         DEBUG_PRINT("%d ", root->code);
-        print_tree(root->right);
+        _print_tree(root->right);
     }
 }
 
 // Generate codes for leaves and free non-leaves from memory
-void _generate_codes(struct freq_byte *top, struct freq_byte **arr) {
+void generate_codes(struct freq_byte *top, struct freq_byte **arr) {
     if (top->left != NULL) {
         top->left->code = (top->code << 1);
         top->left->code_length = top->code_length + 1;
-        _generate_codes(top->left, arr);
+        generate_codes(top->left, arr);
     }
     if (top->right != NULL) {
         top->right->code = (top->code << 1) + 1;
         top->right->code_length = top->code_length + 1;
-        _generate_codes(top->right, arr);
+        generate_codes(top->right, arr);
     } else {
         arr[top->value] = top;
     }
@@ -49,6 +49,7 @@ void free_tree(struct freq_byte *top) {
     }
 }
 
+// Save a tree structure to file by its root
 void serialize(struct freq_byte *root, FILE *fp) {
     int a = 0;
     if (root == NULL) {
@@ -64,7 +65,7 @@ void serialize(struct freq_byte *root, FILE *fp) {
     serialize(root->right, fp);
 }
 
-// This function constructs a tree from a file pointed by 'fp'
+// Load a tree from file and return its root
 struct freq_byte *deserialize(FILE *fp) {
     int code;
     int value;
@@ -87,6 +88,8 @@ struct freq_byte *deserialize(FILE *fp) {
 void encode(FILE *infile, FILE *outfile) {
     fseek(infile, 0, SEEK_SET);
     fseek(outfile, 0, SEEK_SET);
+
+    // Read file and calculate frequencies
 
     unsigned char buffer[BUFFER_SIZE];
     struct freq_byte *frequencies[BYTE];
@@ -166,7 +169,7 @@ void encode(FILE *infile, FILE *outfile) {
         arr[i] = NULL;
     }
 
-    _generate_codes(joined, arr);
+    generate_codes(joined, arr);
 
 #ifdef DEBUG
     DEBUG_PRINT("Codes in format <freq>(<char>/<code_length>):<code>\n");
@@ -182,7 +185,8 @@ void encode(FILE *infile, FILE *outfile) {
 
     unsigned char current = 0;
     int bitcount = 0;
-    // Write head byte
+
+    // Write head byte (0xBA because my name is Vanya in russian)
     fputc(MAGIC_BYTE, outfile);
 
     // Write encoding table
@@ -197,8 +201,9 @@ void encode(FILE *infile, FILE *outfile) {
     print_tree(joined);
     DEBUG_PRINT("\n");
 #endif
+
     DEBUG_PRINT("Encoding:\n");
-    // Encode
+
     while (1) {
         size_t amount = fread(buffer, 1, BUFFER_SIZE, infile);
         for (int i = 0; i < amount; i++) {
@@ -236,8 +241,6 @@ void encode(FILE *infile, FILE *outfile) {
     }
 }
 
-// input file structure
-// MB CC NC TD TD TD DD DD DD
 void decode(FILE *infile, FILE *outfile) {
     fseek(infile, 0, SEEK_SET);
     fseek(outfile, 0, SEEK_SET);
