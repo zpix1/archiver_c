@@ -25,3 +25,5 @@ testFile () {
 testFile archiver_c simple1.txt
 testFile archiver_c simple2.txt
 testFile archiver_c 100MB.bin
+testFile archiver_c image.png
+testFile archiver_c bigimage.jpg
