@@ -15,7 +15,7 @@
 
 #define MAGIC_BYTE 0xBA
 
-#define DEBUG 1
+//#define DEBUG 1
 
 #ifdef DEBUG
 #define DEBUG_PRINT(fmt, args...)   fprintf(stderr, fmt, ## args)

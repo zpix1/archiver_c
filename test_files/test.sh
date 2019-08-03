@@ -3,16 +3,25 @@
 set -e
 
 testFile () {
-    echo "Test on $1"
+    COMPRESS_TIME=`/bin/time -f "%E" ./$1 compress $2 $2.bia 2>&1`
+    EXTRACT_TIME=`/bin/time -f "%E" ./$1 decompress $2.bia $2.extracted 2>&1`
 
-    time ./c_archiver compress $1 $1.bia
-    time ./c_archiver decompress $1.bia $1.uncompressed
+    ORIGINAL_FS=`stat --printf='%s' $2`
+    COMPRESSED_FS=`stat --printf='%s' $2.bia`
 
-    if cmp -s "$1" "$1.uncompressed"; then
-        echo "$1 works well"
+    printf "Testing $2; C=$COMPRESS_TIME; E=$EXTRACT_TIME; `awk "BEGIN { print \"$COMPRESSED_FS/$ORIGINAL_FS\" }"`; ($ORIGINAL_FS->$COMPRESSED_FS) "
+
+#    if
+
+    if cmp -s "$2" "$2.extracted"; then
+        echo -e "\033[32m$2 match\e[0m"
     else
-        echo "$1 is not the same is $1.uncompressed"
+        echo -e "\033[34m$2 difference \e[0m"
     fi
+
+
 }
 
-testFile simple1.txt
+testFile archiver_c simple1.txt
+testFile archiver_c simple2.txt
+testFile archiver_c 100MB.bin
