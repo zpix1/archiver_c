@@ -4,11 +4,10 @@
 #include "coder.h"
 
 int is_file_empty(FILE* fp) {
-    if (NULL != fp) {
+    if (fp != NULL) {
         fseek (fp, 0, SEEK_END);
         int size = ftell(fp);
-
-        if (0 == size) {
+        if (size == 0) {
             return 1;
         }
     } else {

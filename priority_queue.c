@@ -32,7 +32,3 @@ void push(struct freq_byte** head, struct freq_byte* element) {
         start->next = element;
     }
 }
-
-int empty(struct freq_byte** head) {
-    return (*head) == NULL;
-}

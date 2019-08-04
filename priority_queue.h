@@ -29,8 +29,5 @@ struct freq_byte* pop(struct freq_byte** head);
 // Add given `element` to the pq
 void push(struct freq_byte** head, struct freq_byte* element);
 
-// Check if pq is empty
-int empty(struct freq_byte** head);
-
 
 #endif //C_ARCHIVER_PRIORITY_QUEUE_H

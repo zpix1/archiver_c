@@ -8,10 +8,11 @@ void _print_binary(int n, int length) {
     int k, c;
     for (c = length - 1; c >= 0; c--) {
         k = n >> c;
-        if (k & 1)
+        if (k & 1) {
             DEBUG_PRINT("1");
-        else
+        } else {
             DEBUG_PRINT("0");
+        }
     }
     DEBUG_PRINT("\n");
 }
@@ -24,7 +25,7 @@ void _print_tree(struct freq_byte *root) {
     }
 }
 
-// Generate codes for leaves and free non-leaves from memory
+// Generate codes for leaves
 void generate_codes(struct freq_byte *top, struct freq_byte **arr) {
     if (top->left != NULL) {
         top->left->code = (top->code << 1);
@@ -40,21 +41,21 @@ void generate_codes(struct freq_byte *top, struct freq_byte **arr) {
     }
 }
 
-// Free memory from tree by its top
-void free_tree(struct freq_byte *top) {
-    if (top != NULL) {
-        free_tree(top->left);
-        free_tree(top->right);
-        free(top);
+// Free tree's memory by it's root
+void free_tree(struct freq_byte *root) {
+    if (root != NULL) {
+        free_tree(root->left);
+        free_tree(root->right);
+        free(root);
     }
 }
 
 // Save a tree structure to file by its root
 void serialize(struct freq_byte *root, FILE *fp) {
-    int a = 0;
+    int zero = 0;
     if (root == NULL) {
-        fwrite(&a, sizeof(int), 1, fp);
-        fwrite(&a, sizeof(int), 1, fp);
+        fwrite(&zero, sizeof(int), 1, fp);
+        fwrite(&zero, sizeof(int), 1, fp);
         return;
     }
 
@@ -73,11 +74,13 @@ struct freq_byte *deserialize(FILE *fp) {
     fread(&code, sizeof(int), 1, fp);
     fread(&value, sizeof(int), 1, fp);
 
+    // Because code can't be zero at normal
     if (code == 0) {
         return NULL;
     }
 
     struct freq_byte *root = new_freq_byte(0, (unsigned char) value);
+
     root->code = code;
 
     root->left = deserialize(fp);
@@ -107,6 +110,8 @@ void encode(FILE *infile, FILE *outfile) {
             break;
     }
 
+    // Find a head for priority queue
+
     int head_id = -1;
 
     for (int i = 0; i < BYTE; i++) {
@@ -116,10 +121,12 @@ void encode(FILE *infile, FILE *outfile) {
         }
     }
 
+    // Head should exists, otherwise file is empty
     assert(head_id != -1);
-    int counter = 0;
 
     DEBUG_PRINT("Pushing to pq\n");
+
+    int counter = 0;
 
     for (int i = head_id + 1; i < BYTE; i++) {
         if (frequencies[i]->freq != 0) {
@@ -127,6 +134,8 @@ void encode(FILE *infile, FILE *outfile) {
             push(&frequencies[head_id], frequencies[i]);
         }
     }
+
+    // all chars added to pq + head
     int different_chars_count = counter + 1;
 
     DEBUG_PRINT("Found %d different chars\n", different_chars_count);
@@ -136,6 +145,7 @@ void encode(FILE *infile, FILE *outfile) {
     int nodes_count = different_chars_count;
     struct freq_byte *joined;
     if (counter == 0) {
+        // there is only one unique char, special case
         joined = frequencies[head_id];
     } else {
         while (1) {
@@ -150,6 +160,7 @@ void encode(FILE *infile, FILE *outfile) {
             if (counter == 1) {
                 break;
             }
+
             push(&frequencies[head_id], joined);
 
             counter--;
@@ -239,6 +250,8 @@ void encode(FILE *infile, FILE *outfile) {
             free(frequencies[i]);
         }
     }
+
+    free_tree(joined);
 }
 
 void decode(FILE *infile, FILE *outfile) {
