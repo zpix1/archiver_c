@@ -16,9 +16,20 @@ int is_file_empty(FILE* fp) {
     return 0;
 }
 
+void arguments_error() {
+    printf("Usage:\nto compress: ./archiver_c compress <inputfile> <outputfile>\n");
+    printf("to extract: ./archiver_c decompress <inputfile> <outputfile>\n");
+    DEBUG_PRINT("Wrong argument passed\n");
+    exit(0);
+}
+
 int main(int argc, char** argv) {
     char* infilename = argv[2];
     char* outfilename = argv[3];
+
+    if (argc < 4) {
+        arguments_error();
+    }
 
     if (argv[1][0] == 'c') {
         DEBUG_PRINT("Compressing %s to %s\n", infilename, outfilename);
@@ -53,8 +64,7 @@ int main(int argc, char** argv) {
         fclose(outfile);
         DEBUG_PRINT("Done\n");
     } else {
-        printf("Use c to compress, d to decompress\n");
-        DEBUG_PRINT("Wrong argument passed\n");
+        arguments_error();
     }
 
     return 0;
