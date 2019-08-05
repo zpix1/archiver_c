@@ -8,8 +8,6 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "priority_queue.h"
-
 #define BUFFER_SIZE 256
 #define BYTE 256
 

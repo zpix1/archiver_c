@@ -3,11 +3,11 @@
 //
 
 #include "coder.h"
+#include "priority_queue.h"
 
 void _print_binary(int n, int length) {
-    int k, c;
-    for (c = length - 1; c >= 0; c--) {
-        k = n >> c;
+    for (int c = length - 1; c >= 0; c--) {
+        int k = n >> c;
         if (k & 1) {
             DEBUG_PRINT("1");
         } else {
@@ -19,9 +19,13 @@ void _print_binary(int n, int length) {
 
 void _print_tree(struct freq_byte *root) {
     if (root) {
+        DEBUG_PRINT("(%d ", root->code);
         _print_tree(root->left);
-        DEBUG_PRINT("%d ", root->code);
+        DEBUG_PRINT(" ");
         _print_tree(root->right);
+        DEBUG_PRINT(")");
+    } else {
+        DEBUG_PRINT("nil");
     }
 }
 
@@ -53,14 +57,21 @@ void free_tree(struct freq_byte *root) {
 // Save a tree structure to file by its root
 void serialize(struct freq_byte *root, FILE *fp) {
     int zero = 0;
+
     if (root == NULL) {
-        fwrite(&zero, sizeof(int), 1, fp);
-        fwrite(&zero, sizeof(int), 1, fp);
+        fwrite(&zero, sizeof(char), 1, fp);
         return;
     }
 
-    fwrite(&(root->code), sizeof(int), 1, fp);
-    fwrite(&(root->value), sizeof(int), 1, fp);
+    // 0 - NULL, 1 - LEAF, 2 - NODE
+    char flag = (char) (root->left == NULL ? 1 : 2);
+
+    fwrite(&(flag), sizeof(char), 1, fp);
+
+    // If it is a leaf, save the value
+    if (flag == 1) {
+        fwrite(&(root->value), sizeof(char), 1, fp);
+    }
 
     serialize(root->left, fp);
     serialize(root->right, fp);
@@ -68,20 +79,18 @@ void serialize(struct freq_byte *root, FILE *fp) {
 
 // Load a tree from file and return its root
 struct freq_byte *deserialize(FILE *fp) {
-    int code;
-    int value;
+    int value = 0;
+    char flag;
 
-    fread(&code, sizeof(int), 1, fp);
-    fread(&value, sizeof(int), 1, fp);
+    fread(&flag, sizeof(char), 1, fp);
 
-    // Because code can't be zero at normal
-    if (code == 0) {
+    if (flag == 0) {
         return NULL;
+    } else if (flag == 1) {
+        fread(&value, sizeof(char), 1, fp);
     }
 
     struct freq_byte *root = new_freq_byte(0, (unsigned char) value);
-
-    root->code = code;
 
     root->left = deserialize(fp);
     root->right = deserialize(fp);
@@ -187,7 +196,7 @@ void encode(FILE *infile, FILE *outfile) {
     for (int i = 0; i < BYTE; i++) {
         if (arr[i] != NULL) {
             DEBUG_PRINT("%d(%c/%d):", arr[i]->freq, arr[i]->value, arr[i]->code_length);
-            print_b(arr[i]->code, arr[i]->code_length);
+            _print_binary(arr[i]->code, arr[i]->code_length);
         }
     }
 #endif
@@ -209,7 +218,7 @@ void encode(FILE *infile, FILE *outfile) {
     serialize(joined, outfile);
 #ifdef DEBUG
     DEBUG_PRINT("Current tree order:\n");
-    print_tree(joined);
+    _print_tree(joined);
     DEBUG_PRINT("\n");
 #endif
 
@@ -245,12 +254,6 @@ void encode(FILE *infile, FILE *outfile) {
     }
 
     // Free frequencies
-    for (int i = 0; i < BYTE; i++) {
-        if (frequencies[i] != NULL) {
-            free(frequencies[i]);
-        }
-    }
-
     free_tree(joined);
 }
 
@@ -277,7 +280,7 @@ void decode(FILE *infile, FILE *outfile) {
 
 #ifdef DEBUG
     DEBUG_PRINT("Current tree order:\n");
-    print_tree(top);
+    _print_tree(top);
     DEBUG_PRINT("\n");
 #endif
 
